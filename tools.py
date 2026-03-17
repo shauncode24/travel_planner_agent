@@ -1,3 +1,4 @@
+import re
 import requests
 import datetime
 import os
@@ -49,19 +50,62 @@ def web_search(query: str) -> str:
 
 def calculator(expression: str) -> str:
     print("\n🔧 TOOL USED: calculator")
+    print(f"   Raw input: {expression}")
+
+    if not expression or not expression.strip():
+        return "Error: Empty expression. Provide a math expression like: 5000 * 5"
+
+    original = expression
+
+    # Step 1: Remove anything inside parentheses that contains letters (text notes from LLM)
+    expression = re.sub(r'\([^)]*[a-zA-Z][^)]*\)', '', expression)
+
+    # Step 2: Remove currency symbols and thousand separators
+    expression = expression.replace('₹', '').replace('$', '').replace('€', '')
+    expression = expression.replace(',', '')
+
+    # Step 3: Remove any remaining letter sequences
+    expression = re.sub(r'[a-zA-Z_]+', '', expression)
+
+    # Step 4: Keep only math-safe characters
+    expression = re.sub(r'[^0-9+\-*/().\s]', '', expression)
+    expression = expression.strip()
+
+    # Step 5: Fix double operators that might result from cleanup
+    expression = re.sub(r'\*{2,}', '*', expression)
+    expression = re.sub(r'/{2,}', '/', expression)
+    expression = re.sub(r'[+\-*/]{2,}', lambda m: m.group(0)[0], expression)
+
+    print(f"   Cleaned expression: {expression}")
+
+    if not expression:
+        return (
+            f"Error: Could not extract a valid math expression from: '{original}'\n"
+            f"Please use ONLY numbers and operators. Example: 5000 * 5 + 2000"
+        )
 
     try:
-        expression = expression.strip()
+        result = eval(expression, {"__builtins__": {}}, {})
+        result_val = round(float(result), 2)
 
-        allowed_chars = "0123456789+-*/(). "
-        if any(c not in allowed_chars for c in expression):
-            return "Error: Invalid numeric expression"
+        if result_val == int(result_val):
+            result_val = int(result_val)
 
-        result = eval(expression)
-        return f"Result: {result}"
+        print(f"   Result: {result_val}")
+        return f"Result: {result_val}"
 
-    except Exception:
-        return "Error: Invalid numeric expression"
+    except ZeroDivisionError:
+        return "Error: Division by zero."
+
+    except SyntaxError:
+        return (
+            f"Error: Bad math expression after cleanup: '{expression}'\n"
+            f"Original input was: '{original}'\n"
+            f"Tip: Use only digits and + - * / ( ) with NO text or symbols."
+        )
+
+    except Exception as e:
+        return f"Error evaluating '{expression}': {str(e)}"
 
 
 def save_itinerary(text: str) -> str:

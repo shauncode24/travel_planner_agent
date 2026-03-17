@@ -48,16 +48,27 @@ def parse_response(response):
     final_answer = None
 
     for i, line in enumerate(lines):
-        line = line.strip()
+        stripped = line.strip()
 
-        if line.startswith("Action:") and action is None:
-            action = line.replace("Action:", "").strip()
+        if stripped.startswith("Action:") and action is None:
+            action = stripped.replace("Action:", "").strip()
 
-        elif line.startswith("Action Input:") and action_input is None:
-            action_input = line.replace("Action Input:", "").strip()
+        elif stripped.startswith("Action Input:") and action_input is None:
+            action_input = stripped.replace("Action Input:", "").strip()
 
-        elif line.startswith("Final Answer:"):
-            final_answer = "\n".join(lines[i:]).replace("Final Answer:", "").strip()
+        elif stripped.startswith("Final Answer:") and final_answer is None:
+            remainder = stripped.replace("Final Answer:", "").strip()
+            rest_of_lines = lines[i+1:]
+            full_text = (remainder + "\n" + "\n".join(rest_of_lines)).strip()
+
+            # Remove trailing "Remember to save_itinerary" lines
+            clean_lines = []
+            for ln in full_text.split("\n"):
+                if "remember to save_itinerary" in ln.lower():
+                    break
+                clean_lines.append(ln)
+            final_answer = "\n".join(clean_lines).strip()
+            break  # stop parsing — everything after belongs to the answer
 
     return action, action_input, final_answer
 
@@ -67,6 +78,9 @@ def run_agent(user_input):
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_input}
     ]
+
+    invalid_action_count = 0
+    MAX_INVALID = 3
 
     for step in range(50):
         print(f"\n🔁 STEP {step+1} " + "-"*50)
@@ -78,48 +92,68 @@ def run_agent(user_input):
 
         action, action_input, final_answer = parse_response(response)
 
+        # ── Final Answer reached ──────────────────────────────────────
         if final_answer:
             print("\n✅ FINAL ANSWER:\n")
             print(final_answer)
-
             save_itinerary(final_answer)
             break
 
-        if not action or action not in TOOLS:
-            print("\n⚠️ No valid action. Forcing final answer...\n")
+        # ── Valid tool action ─────────────────────────────────────────
+        if action and action in TOOLS:
+            invalid_action_count = 0  # reset counter on valid action
 
+            print(f"\n🔧 Action: {action}")
+            print(f"📥 Input: {action_input}")
+
+            tool_function = TOOLS[action]
+            observation = tool_function(action_input)
+
+            print("\n👁 Observation:")
+            print(str(observation))  # full observation, no truncation
+
+            messages.append({"role": "assistant", "content": response})
             messages.append({
                 "role": "user",
-                "content": "You now have enough information. Provide the FINAL ANSWER."
+                "content": f"Observation: {observation}"
             })
 
-            response = call_llm(messages)
+        # ── Invalid / missing action ──────────────────────────────────
+        else:
+            invalid_action_count += 1
+            print(f"\n⚠️ Invalid action (attempt {invalid_action_count}/{MAX_INVALID}). Got: '{action}'")
 
-            _, _, final_answer = parse_response(response)
-
-            if final_answer:
-                print("\n✅ FINAL ANSWER:\n")
-                print(final_answer)
-                save_itinerary(final_answer)
+            if invalid_action_count >= MAX_INVALID:
+                print("\n🛑 Too many invalid actions. Forcing Final Answer...\n")
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "You have done enough research. "
+                        "Now write the complete Final Answer using the exact format from your instructions. "
+                        "All prices must be in ₹. Fill every field — no placeholders."
+                    )
+                })
+                response = call_llm(messages)
+                _, _, final_answer = parse_response(response)
+                if final_answer:
+                    print("\n✅ FINAL ANSWER:\n")
+                    print(final_answer)
+                    save_itinerary(final_answer)
+                else:
+                    print("\n❌ Could not extract Final Answer. Raw response:\n")
+                    print(response)
                 break
             else:
-                print(response)
-                break
-
-        print(f"\n🔧 Action: {action}")
-        print(f"📥 Input: {action_input}")
-
-        tool_function = TOOLS[action]
-        observation = tool_function(action_input)
-
-        print("\n👁 Observation:")
-        clean_obs = str(observation).split("\n")[0]
-        print(clean_obs[:200] + "...")
-
-        messages.append({"role": "assistant", "content": response})
-        messages.append({
-            "role": "user",
-            "content": f"Observation: {observation}"
-        })
+                # Nudge back on track without forcing Final Answer prematurely
+                messages.append({"role": "assistant", "content": response})
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "That was not a valid action. "
+                        "Valid actions are: web_search, calculator, save_itinerary. "
+                        "Continue with the next research step. "
+                        "Respond with exactly: Thought / Action / Action Input."
+                    )
+                })
 
     return
