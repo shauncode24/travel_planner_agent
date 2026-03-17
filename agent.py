@@ -3,19 +3,15 @@ import os
 from dotenv import load_dotenv
 
 from prompts import SYSTEM_PROMPT
-from tools import TOOLS
+from tools import TOOLS, save_itinerary
 
-# ✅ LOAD ENV FILE
 load_dotenv()
 
-# ✅ GET KEY FROM ENV
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 
 def call_llm(messages):
     url = "https://openrouter.ai/api/v1/chat/completions"
-
-    print("\n🔑 USING API KEY:", OPENROUTER_API_KEY[:20] if OPENROUTER_API_KEY else "None")
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -31,7 +27,9 @@ def call_llm(messages):
 
     response = requests.post(url, headers=headers, json=payload)
 
-    print("\n🛑 RAW API RESPONSE:\n", response.text)
+    print("\n🛑 RAW API RESPONSE (trimmed):\n")
+    preview = str(response).replace("\n", " ")
+    print(preview[:120] + "...")
 
     data = response.json()
 
@@ -59,7 +57,7 @@ def parse_response(response):
             action_input = line.replace("Action Input:", "").strip()
 
         elif line.startswith("Final Answer:"):
-            final_answer = line.replace("Final Answer:", "").strip()
+            final_answer = "\n".join(lines[i:]).replace("Final Answer:", "").strip()
 
     return action, action_input, final_answer
 
@@ -70,8 +68,8 @@ def run_agent(user_input):
         {"role": "user", "content": user_input}
     ]
 
-    for step in range(10):
-        print(f"\n🔁 STEP {step+1}")
+    for step in range(50):
+        print(f"\n🔁 STEP {step+1} " + "-"*50)
 
         response = call_llm(messages)
 
@@ -81,31 +79,42 @@ def run_agent(user_input):
         action, action_input, final_answer = parse_response(response)
 
         if final_answer:
-            print("\n✅ FINAL ANSWER REACHED\n")
-            return final_answer
+            print("\n✅ FINAL ANSWER:\n")
+            print(final_answer)
+
+            save_itinerary(final_answer)
+            break
 
         if not action or action not in TOOLS:
             print("\n⚠️ No valid action. Forcing final answer...\n")
 
             messages.append({
                 "role": "user",
-                "content": "You now have enough information. Provide the FINAL ANSWER in proper format."
+                "content": "You now have enough information. Provide the FINAL ANSWER."
             })
 
             response = call_llm(messages)
-            print("\n🤖 FINAL LLM RESPONSE:\n", response)
 
             _, _, final_answer = parse_response(response)
 
             if final_answer:
-                return final_answer
+                print("\n✅ FINAL ANSWER:\n")
+                print(final_answer)
+                save_itinerary(final_answer)
+                break
             else:
-                return response
+                print(response)
+                break
+
+        print(f"\n🔧 Action: {action}")
+        print(f"📥 Input: {action_input}")
 
         tool_function = TOOLS[action]
         observation = tool_function(action_input)
 
-        print("\n👁 OBSERVATION:\n", observation)
+        print("\n👁 Observation:")
+        clean_obs = str(observation).split("\n")[0]
+        print(clean_obs[:200] + "...")
 
         messages.append({"role": "assistant", "content": response})
         messages.append({
@@ -113,4 +122,4 @@ def run_agent(user_input):
             "content": f"Observation: {observation}"
         })
 
-    return "Final Answer: Max iterations reached."
+    return

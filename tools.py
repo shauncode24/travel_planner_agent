@@ -1,21 +1,15 @@
 import requests
 import datetime
 import os
+from dotenv import load_dotenv
 
-# 🔑 ADD YOUR KEYS HERE
-TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
+load_dotenv()
+
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 
-# ------------------ TOOL 1: WEB SEARCH ------------------ #
 def web_search(query: str) -> str:
     print("\n🔧 TOOL USED: web_search")
-
-    import os
-    from dotenv import load_dotenv
-    import requests
-
-    load_dotenv()
-    TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
     if not TAVILY_API_KEY:
         return "Error: Tavily API key not found"
@@ -34,49 +28,47 @@ def web_search(query: str) -> str:
         response = requests.post(url, json=payload)
         data = response.json()
 
-        # 🔍 DEBUG (optional)
-        print("\n🌐 TAVILY RAW RESPONSE:\n", data)
+        print("\n🌐 TAVILY RAW RESPONSE (trimmed):\n")
+        preview = str(data).replace("\n", " ")
+        print(preview[:120] + "...")
 
-        results = []
+        summary = data.get("answer", "")
 
-        # ✅ include summarized answer
-        if "answer" in data and data["answer"]:
-            results.append("Summary: " + data["answer"])
+        if summary:
+            return summary
 
-        # ✅ include search results
-        for r in data.get("results", []):
-            title = r.get("title", "")
-            content = r.get("content", "")
-            results.append(f"{title}: {content}")
+        results = data.get("results", [])
+        if results:
+            return results[0].get("content", "No useful results found")
 
-        if not results:
-            return "No useful results found"
-
-        return "\n".join(results[:5])
+        return "No useful results found"
 
     except Exception as e:
         return f"Error in web_search: {str(e)}"
 
-# ------------------ TOOL 2: CALCULATOR ------------------ #
+
 def calculator(expression: str) -> str:
     print("\n🔧 TOOL USED: calculator")
 
     try:
-        # VERY basic safety
+        expression = expression.strip()
+
         allowed_chars = "0123456789+-*/(). "
         if any(c not in allowed_chars for c in expression):
-            return "Invalid expression"
+            return "Error: Invalid numeric expression"
 
         result = eval(expression)
         return f"Result: {result}"
 
-    except Exception as e:
-        return f"Calculation error: {str(e)}"
+    except Exception:
+        return "Error: Invalid numeric expression"
 
 
-# ------------------ TOOL 3: SAVE ITINERARY ------------------ #
 def save_itinerary(text: str) -> str:
     print("\n🔧 TOOL USED: save_itinerary")
+
+    if not text:
+        return "Error: No content to save"
 
     os.makedirs("output", exist_ok=True)
 
@@ -85,7 +77,7 @@ def save_itinerary(text: str) -> str:
 
     try:
         with open(filename, "w", encoding="utf-8") as f:
-            f.write(text)
+            f.write(str(text))
 
         return f"Itinerary saved to {filename}"
 
@@ -93,7 +85,6 @@ def save_itinerary(text: str) -> str:
         return f"Error saving file: {str(e)}"
 
 
-# ------------------ TOOL REGISTRY ------------------ #
 TOOLS = {
     "web_search": web_search,
     "calculator": calculator,
