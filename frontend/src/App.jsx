@@ -2,7 +2,7 @@
 // FILE: src/App.jsx
 // ─────────────────────────────────────────────────
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import AmbientBackground from './components/AmbientBackground';
 import Header            from './components/Header';
@@ -34,6 +34,8 @@ const App = () => {
   const [history,     setHistory]     = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcome, setShowWelcome] = useState(true);
+  // Logs accumulate ALL intermediate steps (thought/action/obs) for txt export
+  const logsRef = useRef([]);
 
   /* ── Theme toggle ── */
   const toggleTheme = useCallback(() => {
@@ -46,7 +48,12 @@ const App = () => {
 
   /* ── Append a step card ── */
   const addStep = useCallback((type, content, stepNum = null, toolName = null) => {
-    setSteps(prev => [...prev, { type, content, stepNum, toolName }]);
+    // Always push to logs ref (all step types)
+    logsRef.current.push({ type, content, stepNum, toolName });
+    // Only show user-msg and final on the feed
+    if (type === 'user-msg' || type === 'final') {
+      setSteps(prev => [...prev, { type, content, stepNum, toolName }]);
+    }
   }, []);
 
   /* ── Fill the input from a chip / sidebar card ── */
@@ -65,6 +72,7 @@ const App = () => {
     setSteps([]);
     setStatus('running');
     setCurrentStep(0);
+    logsRef.current = [];
 
     // Save to history (max 8 entries)
     setHistory(prev =>
@@ -137,6 +145,20 @@ const App = () => {
 
     setRunning(false);
     if (status !== 'done') setStatus('idle');
+
+    // ── Save logs as a txt file on the backend ──────────────
+    try {
+      const logLines = logsRef.current.map((s) => {
+        const label = s.type.toUpperCase();
+        const step  = s.stepNum != null ? ` [Step ${s.stepNum}]` : '';
+        return `=== ${label}${step} ===\n${s.content}\n`;
+      }).join('\n');
+      await fetch('/api/save-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: logLines }),
+      });
+    } catch (_) { /* non-critical */ }
   };
 
   /* ── Layout styles ── */
@@ -191,6 +213,8 @@ const App = () => {
             thinking={thinking}
             showWelcome={showWelcome}
             onFillPrompt={fillPrompt}
+            running={running}
+            status={status}
           />
 
           <InputArea
