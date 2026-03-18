@@ -74,17 +74,17 @@ Then: Action Input = ONLY numbers and operators: X + Z + B + C + D + E + F
 FINAL ANSWER FORMAT:
 ════════════════════════════════════════
 
-## 🌴 [Trip Title] — [Duration] for [N] People | Budget: ₹[amount]
+## [Trip Title] — [Duration] for [N] People | Budget: ₹[amount]
 
-### ✈️ How to Get There
+### How to Get There
 - Option 1: [type] | [route] | [duration] | ₹[price] per person
 - Option 2: [type] | [route] | [duration] | ₹[price] per person
 
-### 🏨 Where to Stay
+### Where to Stay
 - Option 1: [REAL hotel name from search] | [area] | ₹[per night]/night | Total [N] nights: ₹[total]
 - Option 2: [REAL hotel name from search] | [area] | ₹[per night]/night | Total [N] nights: ₹[total]
 
-### 📅 Day-by-Day Itinerary
+### Day-by-Day Itinerary
 
 **Day 1 — [Theme]**
 - Morning: [activity + place name]
@@ -95,7 +95,7 @@ FINAL ANSWER FORMAT:
 
 [Repeat for every day of the trip]
 
-### 💰 Budget Breakdown
+### Budget Breakdown
 | Category                  | Cost (₹)      |
 |---------------------------|---------------|
 | Transport (total)         | ₹             |
@@ -108,10 +108,10 @@ FINAL ANSWER FORMAT:
 | **TOTAL**                 | **₹**         |
 | **Remaining from budget** | **₹**         |
 
-### 📍 Must-Visit Places
+### Must-Visit Places
 - **[Place]** — [what it's known for] | Best time: [time] | Entry: ₹[fee or Free]
 
-### 💡 Travel Tips
+### Travel Tips
 1. [tip]
 2. [tip]
 3. [tip]

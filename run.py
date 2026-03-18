@@ -1,6 +1,6 @@
 from agent import run_agent
 
-print("🌍 AI Travel Planner Agent (ReAct)")
+print("AI Travel Planner Agent")
 print("----------------------------------")
 
 user_input = input("\nEnter your travel request:\n> ")

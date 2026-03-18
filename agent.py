@@ -27,14 +27,14 @@ def call_llm(messages):
 
     response = requests.post(url, headers=headers, json=payload)
 
-    print("\n🛑 RAW API RESPONSE (trimmed):\n")
+    print("\nRAW API RESPONSE (trimmed):\n")
     preview = str(response).replace("\n", " ")
     print(preview[:120] + "...")
 
     data = response.json()
 
     if "choices" not in data:
-        print("\n❌ API ERROR:\n", data)
+        print("\nAPI ERROR:\n", data)
         return "Final Answer: API call failed."
 
     return data["choices"][0]["message"]["content"]
@@ -83,18 +83,18 @@ def run_agent(user_input):
     MAX_INVALID = 3
 
     for step in range(50):
-        print(f"\n🔁 STEP {step+1} " + "-"*50)
+        print(f"\nSTEP {step+1} " + "-"*50)
 
         response = call_llm(messages)
 
-        print("\n🤖 LLM RESPONSE:\n")
+        print("\nLLM RESPONSE:\n")
         print(response)
 
         action, action_input, final_answer = parse_response(response)
 
         # ── Final Answer reached ──────────────────────────────────────
         if final_answer:
-            print("\n✅ FINAL ANSWER:\n")
+            print("\nFINAL ANSWER:\n")
             print(final_answer)
             save_itinerary(final_answer)
             break
@@ -103,13 +103,13 @@ def run_agent(user_input):
         if action and action in TOOLS:
             invalid_action_count = 0  # reset counter on valid action
 
-            print(f"\n🔧 Action: {action}")
-            print(f"📥 Input: {action_input}")
+            print(f"\nAction: {action}")
+            print(f"Input: {action_input}")
 
             tool_function = TOOLS[action]
             observation = tool_function(action_input)
 
-            print("\n👁 Observation:")
+            print("\nObservation:")
             print(str(observation))  # full observation, no truncation
 
             messages.append({"role": "assistant", "content": response})
@@ -121,10 +121,10 @@ def run_agent(user_input):
         # ── Invalid / missing action ──────────────────────────────────
         else:
             invalid_action_count += 1
-            print(f"\n⚠️ Invalid action (attempt {invalid_action_count}/{MAX_INVALID}). Got: '{action}'")
+            print(f"\nInvalid action (attempt {invalid_action_count}/{MAX_INVALID}). Got: '{action}'")
 
             if invalid_action_count >= MAX_INVALID:
-                print("\n🛑 Too many invalid actions. Forcing Final Answer...\n")
+                print("\nToo many invalid actions. Forcing Final Answer...\n")
                 messages.append({
                     "role": "user",
                     "content": (
@@ -136,11 +136,11 @@ def run_agent(user_input):
                 response = call_llm(messages)
                 _, _, final_answer = parse_response(response)
                 if final_answer:
-                    print("\n✅ FINAL ANSWER:\n")
+                    print("\nFINAL ANSWER:\n")
                     print(final_answer)
                     save_itinerary(final_answer)
                 else:
-                    print("\n❌ Could not extract Final Answer. Raw response:\n")
+                    print("\nCould not extract Final Answer. Raw response:\n")
                     print(response)
                 break
             else:

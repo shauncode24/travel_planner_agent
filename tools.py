@@ -10,7 +10,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 
 def web_search(query: str) -> str:
-    print("\n🔧 TOOL USED: web_search")
+    print("\nTOOL USED: web_search")
 
     if not TAVILY_API_KEY:
         return "Error: Tavily API key not found"
@@ -29,7 +29,7 @@ def web_search(query: str) -> str:
         response = requests.post(url, json=payload)
         data = response.json()
 
-        print("\n🌐 TAVILY RAW RESPONSE (trimmed):\n")
+        print("\nTAVILY RAW RESPONSE (trimmed):\n")
         preview = str(data).replace("\n", " ")
         print(preview[:120] + "...")
 
@@ -49,7 +49,7 @@ def web_search(query: str) -> str:
 
 
 def calculator(expression: str) -> str:
-    print("\n🔧 TOOL USED: calculator")
+    print("\nTOOL USED: calculator")
     print(f"   Raw input: {expression}")
 
     if not expression or not expression.strip():
@@ -109,7 +109,7 @@ def calculator(expression: str) -> str:
 
 
 def save_itinerary(text: str) -> str:
-    print("\n🔧 TOOL USED: save_itinerary")
+    print("\nTOOL USED: save_itinerary")
 
     if not text:
         return "Error: No content to save"
