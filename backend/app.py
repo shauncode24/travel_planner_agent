@@ -143,6 +143,27 @@ def save():
 
 # ── Health check  ────────────────────────────────────────────────────────────
 
+@app.route("/api/save-log", methods=["POST"])
+def save_log():
+    """Save the agent reasoning steps (thoughts / actions / observations) as a log file."""
+    text = (request.json or {}).get("text", "")
+    if not text:
+        return jsonify({"result": "Error: no content"}), 400
+
+    os.makedirs("output", exist_ok=True)
+    ts       = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"output/log_{ts}.txt"
+
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Travel Planner Agent — Step Log\nGenerated: {ts}\n")
+            f.write("=" * 60 + "\n\n")
+            f.write(text)
+        return jsonify({"result": f"Log saved to {filename}"})
+    except Exception as e:
+        return jsonify({"result": f"Error saving log: {e}"}), 500
+
+
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
