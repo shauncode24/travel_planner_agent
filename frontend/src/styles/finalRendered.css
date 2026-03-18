@@ -1,0 +1,61 @@
+/* ─────────────────────────────────────────────────
+   FILE: src/styles/finalRendered.css
+───────────────────────────────────────────────── */
+
+.final-rendered h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 18px 0 10px;
+  letter-spacing: -0.3px;
+}
+
+.final-rendered h3 {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin: 22px 0 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.final-rendered p  { margin-bottom: 8px; line-height: 1.75; font-size: 14px; }
+.final-rendered ul { padding-left: 22px; margin-bottom: 10px; }
+.final-rendered li { margin-bottom: 6px; font-size: 14px; line-height: 1.65; }
+.final-rendered strong { color: var(--accent); font-weight: 600; }
+
+.final-rendered table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.final-rendered table th {
+  text-align: left;
+  padding: 9px 14px;
+  background: var(--bg3);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+
+.final-rendered table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.final-rendered table tr:last-child td { border-bottom: none; }
+.final-rendered table tbody tr:nth-child(even) td {
+  background: rgba(128,128,128,0.04);
+}

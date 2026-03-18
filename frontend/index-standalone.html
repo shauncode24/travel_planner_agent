@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yatra AI — Travel Planner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FILE: src/styles/globals.css  (injected as <style>)
+  ════════════════════════════════════════════════════════ -->
+  <style id="globals-css">
+    /* ── CSS Variables ── */
+    :root {
+      --bg:           #0b0c12;
+      --bg2:          #10111a;
+      --bg3:          #17192a;
+      --bg4:          #1e2035;
+      --border:       rgba(255,255,255,0.07);
+      --border-hi:    rgba(240,160,48,0.35);
+      --text:         #e8e5dc;
+      --text-dim:     #7a7870;
+      --text-dimmer:  #3a3930;
+      --accent:       #f0a030;
+      --accent2:      #e05a20;
+      --accent-glow:  rgba(240,160,48,0.10);
+      --blue:         #6496ff;
+      --green:        #3cc88c;
+      --yellow:       #f0c030;
+      --thought-bg:   rgba(100,150,255,0.07);
+      --thought-bdr:  rgba(100,150,255,0.22);
+      --action-bg:    rgba(60,200,140,0.07);
+      --action-bdr:   rgba(60,200,140,0.22);
+      --obs-bg:       rgba(240,192,48,0.06);
+      --obs-bdr:      rgba(240,192,48,0.2);
+      --final-bg:     rgba(240,160,48,0.07);
+      --final-bdr:    rgba(240,160,48,0.28);
+      --shadow-lg:    0 24px 80px rgba(0,0,0,0.5);
+      --radius:       14px;
+      --radius-sm:    8px;
+      --sidebar-w:    272px;
+      --header-h:     62px;
+    }
+
+    [data-theme="light"] {
+      --bg:           #f0f6ff;
+      --bg2:          #e4eef9;
+      --bg3:          #d6e6f5;
+      --bg4:          #c8ddf0;
+      --border:       rgba(0,80,180,0.12);
+      --border-hi:    rgba(0,100,200,0.35);
+      --text:         #0d1a2e;
+      --text-dim:     #4a6080;
+      --text-dimmer:  #9ab0cc;
+      --accent:       #0066cc;
+      --accent2:      #0044aa;
+      --accent-glow:  rgba(0,100,200,0.08);
+      --blue:         #2255cc;
+      --green:        #0d9e6a;
+      --yellow:       #b38a00;
+      --thought-bg:   rgba(34,85,204,0.06);
+      --thought-bdr:  rgba(34,85,204,0.2);
+      --action-bg:    rgba(13,158,106,0.06);
+      --action-bdr:   rgba(13,158,106,0.2);
+      --obs-bg:       rgba(179,138,0,0.06);
+      --obs-bdr:      rgba(179,138,0,0.18);
+      --final-bg:     rgba(0,100,200,0.06);
+      --final-bdr:    rgba(0,100,200,0.22);
+      --shadow-lg:    0 12px 40px rgba(0,60,140,0.1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.35s, color 0.35s;
+    }
+
+    #root { height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Scrollbars ── */
+    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp    { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+    @keyframes float     { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+    @keyframes spin      { to { transform: rotate(360deg); } }
+    @keyframes blink     { 50% { opacity:0; } }
+    @keyframes drift     { from{transform:translate(0,0);} to{transform:translate(40px,30px);} }
+    @keyframes bounce-dot {
+      0%,80%,100% { transform:scale(0.65); opacity:0.35; }
+      40%         { transform:scale(1);    opacity:1;    }
+    }
+    @keyframes pip-pulse { from{opacity:0.55;} to{opacity:1;} }
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    .animate-fadeUp  { animation: fadeUp  0.4s ease both; }
+    .animate-fadeIn  { animation: fadeIn  0.3s ease both; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/utils/systemPrompt.js
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" data-type="module" id="systemPrompt-js">
+window.getSystemPrompt = function() {
+  return `You are an AI Travel Planner Agent for INDIAN travellers using the ReAct framework.
+
+IMPORTANT: All costs MUST be in Indian Rupees (₹). Never use $ or USD.
+If a search result shows prices in $, convert to ₹: price × 83 = ₹
+
+STRICT FORMAT — EVERY RESPONSE:
+Thought: [one sentence — what you are doing right now]
+Action: [one tool name]
+Action Input: [input for that tool]
+
+OR when all research is done:
+Thought: I now have all the information needed.
+Final Answer:
+[complete itinerary]
+
+RULES:
+- NEVER write Final Answer before completing ALL 4 web_search steps
+- Action must be exactly: web_search, calculator, or save_itinerary
+- One action per response, wait for Observation
+- Max 8 total steps
+
+RESEARCH ORDER:
+1. web_search → flights trains from nearest city to destination INR price
+2. web_search → specific budget hotels destination INR per night (real hotel names)
+3. web_search → top attractions restaurants destination entry fees meal cost INR
+4. web_search → nightlife activities destination entry fee INR
+5. calculator → transport + hotel*nights + food*days*people + activities + nightlife + misc
+6. Final Answer → complete itinerary in format below
+7. save_itinerary → save the text
+
+FINAL ANSWER FORMAT:
+## [Trip Title] — [Duration] for [N] People | Budget: ₹[amount]
+
+### How to Get There
+- Option 1: [type] | [route] | [duration] | ₹[price] per person
+- Option 2: [type] | [route] | [duration] | ₹[price] per person
+
+### Where to Stay
+- Option 1: [REAL hotel name] | [area] | ₹[per night]/night | Total: ₹[total]
+- Option 2: [REAL hotel name] | [area] | ₹[per night]/night | Total: ₹[total]
+
+### Day-by-Day Itinerary
+**Day 1 — [Theme]**
+- Morning: [activity + place]
+- Afternoon: [activity + place]
+- Evening: [activity + place]
+- Dinner: [REAL restaurant name] — ₹[cost]
+- Overnight: [hotel]
+[Repeat for every day]
+
+### Budget Breakdown
+| Category | Cost (₹) |
+|---|---|
+| Transport (total) | ₹ |
+| Accommodation (total) | ₹ |
+| Food (total) | ₹ |
+| Activities & entry fees | ₹ |
+| Nightlife & drinks | ₹ |
+| Local transport | ₹ |
+| Miscellaneous | ₹ |
+| **TOTAL** | **₹** |
+| **Remaining from budget** | **₹** |
+
+### Must-Visit Places
+- **[Place]** — [description] | Entry: ₹[fee or Free]
+
+### Travel Tips
+1. [tip]
+2. [tip]
+3. [tip]
+4. [tip]
+5. [tip]`;
+};
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/utils/agentRunner.js
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" data-type="module" id="agentRunner-js">
+window.AgentRunner = {
+  parseResponse(text) {
+    const lines = text.split('\n');
+    let thought = '', action = '', actionInput = '', finalAnswer = '';
+    let inFinal = false, finalLines = [];
+    for (let i = 0; i < lines.length; i++) {
+      const s = lines[i].trim();
+      if (s.startsWith('Thought:') && !inFinal)      thought = s.replace('Thought:', '').trim();
+      else if (s.startsWith('Action:') && !inFinal)  action  = s.replace('Action:', '').trim();
+      else if (s.startsWith('Action Input:') && !inFinal) actionInput = s.replace('Action Input:', '').trim();
+      else if (s.startsWith('Final Answer:')) {
+        inFinal = true;
+        const rem = s.replace('Final Answer:', '').trim();
+        if (rem) finalLines.push(rem);
+      } else if (inFinal) {
+        if (s.toLowerCase().includes('remember to save_itinerary')) break;
+        finalLines.push(lines[i]);
+      }
+    }
+    if (finalLines.length) finalAnswer = finalLines.join('\n').trim();
+    return { thought, action, actionInput, finalAnswer };
+  },
+
+  async callLLM(messages) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: window.getSystemPrompt(),
+        messages
+      })
+    });
+    const data = await res.json();
+    return data.content?.map(b => b.text || '').join('') || '';
+  },
+
+  async webSearch(query) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: `Simulate a web search for Indian travel planning.
+Query: "${query}"
+Return realistic, specific results with REAL hotel/restaurant names, actual INR prices, specific details about India.
+Max 180 words. Be specific — include names, costs, times.`
+        }]
+      })
+    });
+    const d = await res.json();
+    return d.content?.[0]?.text || 'No results.';
+  },
+
+  evalCalc(expr) {
+    try {
+      const clean = expr
+        .replace(/[₹$€,]/g, '')
+        .replace(/[a-zA-Z_]+/g, '')
+        .replace(/[^0-9+\-*\/().\s]/g, '')
+        .trim();
+      const result = Function('"use strict"; return (' + clean + ')')();
+      return `Result: ${Math.round(result)}`;
+    } catch { return 'Error: Could not evaluate.'; }
+  },
+
+  downloadItinerary(text) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `yatra_itinerary_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    return 'Itinerary downloaded successfully.';
+  },
+
+  async executeTool(action, input) {
+    if (action === 'web_search')    return await this.webSearch(input);
+    if (action === 'calculator')    return this.evalCalc(input);
+    if (action === 'save_itinerary') return this.downloadItinerary(input);
+    return 'Unknown tool.';
+  }
+};
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/utils/markdownRenderer.js
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" data-type="module" id="markdownRenderer-js">
+window.renderMarkdown = function(text) {
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // tables
+    .replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)+)/g, (_, head, body) => {
+      const ths = head.split('|').filter(c=>c.trim()).map(c=>`<th>${c.trim()}</th>`).join('');
+      const rows = body.trim().split('\n').map(row => {
+        const tds = row.split('|').filter(c=>c.trim()).map(c=>`<td>${c.trim()}</td>`).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+    })
+    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/((<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    .replace(/\n\n(?!<)/g, '</p><p>');
+  return '<p>' + html + '</p>';
+};
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/AmbientBackground.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="AmbientBackground-jsx">
+const AmbientBackground = () => {
+  const style = {
+    position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden'
+  };
+  const blob1 = {
+    position: 'absolute', width: 700, height: 700, borderRadius: '50%',
+    background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
+    top: -200, right: -200,
+    animation: 'drift 20s ease-in-out infinite alternate',
+  };
+  const blob2 = {
+    position: 'absolute', width: 500, height: 500, borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(100,150,255,0.04) 0%, transparent 70%)',
+    bottom: -100, left: -100,
+    animation: 'drift 26s ease-in-out infinite alternate-reverse',
+  };
+  return (
+    <div style={style}>
+      <div style={blob1}/>
+      <div style={blob2}/>
+    </div>
+  );
+};
+window.AmbientBackground = AmbientBackground;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/Header.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="Header-jsx">
+const Header = ({ theme, onToggleTheme, status }) => {
+  const s = {
+    header: {
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 32px', height: 'var(--header-h)',
+      borderBottom: '1px solid var(--border)',
+      background: 'var(--bg)',
+      position: 'sticky', top: 0, zIndex: 100,
+      backdropFilter: 'blur(20px)',
+    },
+    logo: { display: 'flex', alignItems: 'baseline', gap: 10 },
+    logoTitle: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: 26, fontWeight: 600, letterSpacing: -0.5,
+      color: 'var(--text)',
+    },
+    logoEm: { color: 'var(--accent)', fontStyle: 'italic' },
+    logoTag: {
+      fontFamily: "'DM Mono', monospace",
+      fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+      color: 'var(--text-dim)', border: '1px solid var(--border)',
+      padding: '2px 8px', borderRadius: 4,
+    },
+    right: { display: 'flex', alignItems: 'center', gap: 16 },
+    dot: {
+      width: 8, height: 8, borderRadius: '50%',
+      background: status === 'running' ? 'var(--accent)' : 'var(--text-dimmer)',
+      boxShadow: status === 'running' ? '0 0 8px var(--accent)' : 'none',
+      animation: status === 'running' ? 'pip-pulse 1.2s ease-in-out infinite alternate' : 'none',
+      transition: 'all 0.3s',
+    },
+    statusTxt: {
+      fontFamily: "'DM Mono', monospace", fontSize: 11,
+      color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1,
+    },
+    toggle: {
+      width: 44, height: 24, borderRadius: 12,
+      background: 'var(--bg3)', border: '1px solid var(--border)',
+      cursor: 'pointer', position: 'relative',
+      display: 'flex', alignItems: 'center', padding: 3,
+      transition: 'all 0.3s',
+    },
+    knob: {
+      width: 18, height: 18, borderRadius: '50%',
+      background: 'var(--accent)',
+      transform: theme === 'light' ? 'translateX(20px)' : 'translateX(0)',
+      transition: 'transform 0.3s',
+    }
+  };
+  const labels = { idle: 'Ready', running: 'Planning…', done: 'Done!' };
+  return (
+    <header style={s.header}>
+      <div style={s.logo}>
+        <span style={s.logoTitle}><em style={s.logoEm}>Yatra</em> AI</span>
+        <span style={s.logoTag}>Travel Agent</span>
+      </div>
+      <div style={s.right}>
+        <div style={s.dot}/>
+        <span style={s.statusTxt}>{labels[status] || 'Ready'}</span>
+        <div style={s.toggle} onClick={onToggleTheme} title="Toggle theme">
+          <div style={s.knob}/>
+        </div>
+      </div>
+    </header>
+  );
+};
+window.Header = Header;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/Sidebar.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="Sidebar-jsx">
+const { useState } = React;
+
+const QUICK_PLANS = [
+  { emoji: '🏖️', title: 'Goa Getaway',      sub: '5 days · 2 people',  prompt: 'Plan a 5-day trip from Mumbai to Goa for 2 people in April. Budget ₹30,000' },
+  { emoji: '🏔️', title: 'Manali Mountains', sub: '4 days · 3 friends',  prompt: 'Plan a 4-day trip from Delhi to Manali for 3 friends in May. Budget ₹25,000' },
+  { emoji: '🏯', title: 'Jaipur Heritage',  sub: '3 days · couple',     prompt: 'Plan a 3-day heritage trip to Jaipur for 2 people in March. Budget ₹20,000' },
+  { emoji: '🌿', title: 'Kerala Backwaters',sub: '6 days · 2 people',   prompt: 'Plan a 6-day trip from Bengaluru to Kerala for 2 people in June. Budget ₹35,000' },
+];
+
+const TOOLS = [
+  { dot: '#6496ff', name: 'web_search' },
+  { dot: '#3cc88c', name: 'calculator' },
+  { dot: '#f0a030', name: 'save_itinerary' },
+];
+
+const Sidebar = ({ onFillPrompt, history }) => {
+  const [hoveredCard, setHoveredCard] = useState(null);
+
+  const s = {
+    aside: {
+      width: 'var(--sidebar-w)', minWidth: 'var(--sidebar-w)',
+      borderRight: '1px solid var(--border)',
+      background: 'var(--bg2)',
+      display: 'flex', flexDirection: 'column', gap: 24,
+      padding: '28px 18px',
+      overflowY: 'auto',
+    },
+    label: {
+      fontFamily: "'DM Mono', monospace", fontSize: 10,
+      letterSpacing: 2, textTransform: 'uppercase',
+      color: 'var(--text-dimmer)', marginBottom: 10, display: 'block',
+    },
+    quickCards: { display: 'flex', flexDirection: 'column', gap: 8 },
+    card: (i) => ({
+      background: hoveredCard === i ? 'var(--accent-glow)' : 'rgba(255,255,255,0.02)',
+      border: `1px solid ${hoveredCard === i ? 'var(--border-hi)' : 'var(--border)'}`,
+      borderRadius: 12, padding: '12px 14px',
+      cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+    }),
+    cardEmoji: { fontSize: 18, marginBottom: 4, display: 'block' },
+    cardTitle: { fontSize: 13, fontWeight: 500, color: 'var(--text)' },
+    cardSub:   { fontSize: 11, color: 'var(--text-dim)', marginTop: 2 },
+    cardArrow: {
+      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+      color: 'var(--accent)', fontSize: 14, opacity: hoveredCard !== null ? 1 : 0,
+      transition: 'opacity 0.2s',
+    },
+    divider: { height: 1, background: 'var(--border)' },
+    toolList: { display: 'flex', flexDirection: 'column', gap: 6 },
+    toolPill: {
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '9px 12px', borderRadius: 10,
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid var(--border)',
+      fontFamily: "'DM Mono', monospace", fontSize: 12,
+      color: 'var(--text-dim)',
+    },
+    dot: (color) => ({
+      width: 6, height: 6, borderRadius: '50%',
+      background: color, flexShrink: 0,
+    }),
+    historyList: { display: 'flex', flexDirection: 'column', gap: 6 },
+    historyItem: {
+      fontSize: 11, color: 'var(--text-dim)',
+      padding: '8px 10px', borderRadius: 8,
+      background: 'rgba(255,255,255,0.015)',
+      border: '1px solid transparent',
+      cursor: 'pointer', transition: 'all 0.2s',
+      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+    },
+    noHistory: { fontSize: 11, color: 'var(--text-dimmer)', padding: '4px 0' },
+  };
+
+  return (
+    <aside style={s.aside}>
+      <div>
+        <span style={s.label}>Quick Plans</span>
+        <div style={s.quickCards}>
+          {QUICK_PLANS.map((p, i) => (
+            <div key={i}
+              style={s.card(i)}
+              onClick={() => onFillPrompt(p.prompt)}
+              onMouseEnter={() => setHoveredCard(i)}
+              onMouseLeave={() => setHoveredCard(null)}
+            >
+              <span style={s.cardEmoji}>{p.emoji}</span>
+              <div style={s.cardTitle}>{p.title}</div>
+              <div style={s.cardSub}>{p.sub}</div>
+              <span style={s.cardArrow}>→</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={s.divider}/>
+
+      <div>
+        <span style={s.label}>Available Tools</span>
+        <div style={s.toolList}>
+          {TOOLS.map(t => (
+            <div key={t.name} style={s.toolPill}>
+              <span style={s.dot(t.dot)}/>
+              {t.name}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={s.divider}/>
+
+      <div style={{ flex: 1 }}>
+        <span style={s.label}>History</span>
+        <div style={s.historyList}>
+          {history.length === 0
+            ? <div style={s.noHistory}>No previous sessions</div>
+            : history.map((h, i) => (
+                <div key={i} style={s.historyItem} title={h}>{h}</div>
+              ))
+          }
+        </div>
+      </div>
+    </aside>
+  );
+};
+window.Sidebar = Sidebar;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/StepCard.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="StepCard-jsx">
+const STEP_CONFIG = {
+  thought:  { label: 'Thought',     icon: '💭', bgVar: '--thought-bg', bdrVar: '--thought-bdr', color: 'var(--blue)'   },
+  action:   { label: 'Action',      icon: '⚡', bgVar: '--action-bg',  bdrVar: '--action-bdr',  color: 'var(--green)'  },
+  obs:      { label: 'Observation', icon: '👁', bgVar: '--obs-bg',     bdrVar: '--obs-bdr',     color: 'var(--yellow)' },
+  final:    { label: 'Itinerary',   icon: '✨', bgVar: '--final-bg',   bdrVar: '--final-bdr',   color: 'var(--accent)' },
+  'user-msg':{ label: 'Request',    icon: '👤', bgVar: '--accent-glow',bdrVar: '--border-hi',   color: 'var(--accent2)'},
+};
+
+const StepCard = ({ type, content, stepNum, toolName }) => {
+  const cfg = STEP_CONFIG[type] || STEP_CONFIG.thought;
+
+  const s = {
+    wrapper: {
+      padding: '4px 0',
+      animation: 'fadeUp 0.35s ease both',
+    },
+    card: {
+      borderRadius: 'var(--radius)',
+      padding: '14px 18px',
+      border: `1px solid var(${cfg.bdrVar})`,
+      background: `var(${cfg.bgVar})`,
+      marginBottom: 8,
+    },
+    labelRow: {
+      display: 'flex', alignItems: 'center', gap: 8,
+      marginBottom: 8,
+    },
+    labelText: {
+      fontFamily: "'DM Mono', monospace",
+      fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+      color: cfg.color,
+    },
+    badge: {
+      background: cfg.color, color: 'var(--bg)',
+      padding: '1px 6px', borderRadius: 3,
+      fontSize: 9, letterSpacing: 1, opacity: 0.85,
+    },
+    stepNum: {
+      marginLeft: 'auto',
+      fontFamily: "'DM Mono', monospace",
+      fontSize: 10, color: 'var(--text-dimmer)',
+    },
+    body: {
+      fontSize: 14, lineHeight: 1.72,
+      color: 'var(--text)',
+      whiteSpace: type === 'action' ? 'nowrap' : 'pre-wrap',
+      overflowX: type === 'action' ? 'auto' : 'visible',
+      fontFamily: type === 'action' ? "'DM Mono', monospace" : "'Plus Jakarta Sans', sans-serif",
+      ...(type === 'action' && { fontSize: 12, color: 'var(--text-dim)' }),
+    },
+    finalBody: { fontSize: 14, lineHeight: 1.75 },
+  };
+
+  // Final answer uses HTML renderer
+  if (type === 'final') {
+    return (
+      <div style={s.wrapper}>
+        <div style={s.card}>
+          <div style={s.labelRow}>
+            <span>{cfg.icon}</span>
+            <span style={s.labelText}>{cfg.label}</span>
+            {stepNum != null && <span style={s.stepNum}>step {stepNum}</span>}
+          </div>
+          <div
+            style={s.finalBody}
+            className="final-rendered"
+            dangerouslySetInnerHTML={{ __html: window.renderMarkdown(content) }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const displayLabel = toolName || cfg.label;
+
+  return (
+    <div style={s.wrapper}>
+      <div style={s.card}>
+        <div style={s.labelRow}>
+          <span>{cfg.icon}</span>
+          <span style={s.labelText}>{displayLabel}</span>
+          {type === 'action' && toolName && <span style={s.badge}>{toolName.replace('_',' ')}</span>}
+          {stepNum != null && <span style={s.stepNum}>step {stepNum}</span>}
+        </div>
+        <div style={s.body}>{content}</div>
+      </div>
+    </div>
+  );
+};
+window.StepCard = StepCard;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/ThinkingCard.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="ThinkingCard-jsx">
+const ThinkingCard = ({ label = 'Agent is researching…' }) => {
+  const s = {
+    wrap: {
+      display: 'flex', alignItems: 'center', gap: 14,
+      padding: '14px 18px', borderRadius: 'var(--radius)',
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid var(--border)',
+      margin: '4px 0 8px',
+      animation: 'fadeUp 0.3s ease both',
+    },
+    dots: { display: 'flex', gap: 5 },
+    dot: (delay) => ({
+      width: 6, height: 6, borderRadius: '50%',
+      background: 'var(--accent)',
+      animation: `bounce-dot 1.2s ease-in-out ${delay}s infinite`,
+    }),
+    text: {
+      fontFamily: "'DM Mono', monospace",
+      fontSize: 12, color: 'var(--text-dim)',
+    }
+  };
+  return (
+    <div style={s.wrap}>
+      <div style={s.dots}>
+        <div style={s.dot(0)}/>
+        <div style={s.dot(0.15)}/>
+        <div style={s.dot(0.3)}/>
+      </div>
+      <span style={s.text}>{label}</span>
+    </div>
+  );
+};
+window.ThinkingCard = ThinkingCard;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/ProgressPips.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="ProgressPips-jsx">
+const ProgressPips = ({ total = 8, current = 0, visible = false }) => {
+  if (!visible) return null;
+  const s = {
+    wrap: {
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '0 48px 10px',
+      animation: 'fadeIn 0.3s ease both',
+    },
+    label: {
+      fontFamily: "'DM Mono', monospace", fontSize: 11,
+      color: 'var(--text-dimmer)', whiteSpace: 'nowrap',
+    },
+    pips: { display: 'flex', gap: 4 },
+    pip: (i) => ({
+      width: 22, height: 3, borderRadius: 2,
+      background: i < current - 1 ? 'var(--accent)'
+                : i === current - 1 ? 'var(--accent2)'
+                : 'var(--border)',
+      transition: 'background 0.4s',
+      animation: i === current - 1 ? 'pip-pulse 1s ease-in-out infinite alternate' : 'none',
+    }),
+    bar: {
+      flex: 1, height: 2, borderRadius: 1,
+      background: 'var(--border)', overflow: 'hidden',
+    },
+    fill: {
+      height: '100%', borderRadius: 1,
+      background: 'linear-gradient(90deg, var(--accent), var(--accent2))',
+      width: `${Math.min((current / total) * 100, 100)}%`,
+      transition: 'width 0.6s ease',
+    },
+  };
+  return (
+    <div style={s.wrap}>
+      <span style={s.label}>Step {current}/{total}</span>
+      <div style={s.pips}>
+        {Array.from({ length: total }, (_, i) => (
+          <div key={i} style={s.pip(i)}/>
+        ))}
+      </div>
+      <div style={s.bar}><div style={s.fill}/></div>
+    </div>
+  );
+};
+window.ProgressPips = ProgressPips;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/WelcomeScreen.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="WelcomeScreen-jsx">
+const CHIPS = [
+  { label: '🏖️ Goa', prompt: 'Goa for 4 days from Mumbai, ₹25,000 for 2 people' },
+  { label: '🏜️ Rajasthan', prompt: 'Rajasthan 7-day road trip from Delhi, ₹50,000 for 4 people' },
+  { label: '☕ Coorg', prompt: 'Coorg 3 days from Bengaluru for 2, ₹15,000' },
+  { label: '🐠 Andaman', prompt: 'Andaman 7 days from Chennai for couple, ₹60,000' },
+  { label: '🏔️ Ladakh', prompt: 'Leh-Ladakh 8 days from Delhi for 3 friends, ₹70,000' },
+  { label: '🌄 Ooty', prompt: 'Ooty 3 days from Chennai for family of 4, ₹20,000' },
+];
+
+const WelcomeScreen = ({ onFillPrompt }) => {
+  const [hoveredChip, setHoveredChip] = React.useState(null);
+
+  const s = {
+    wrap: {
+      flex: 1, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 22, textAlign: 'center',
+      padding: '60px 40px',
+      animation: 'fadeUp 0.6s ease both',
+    },
+    icon: { fontSize: 54, animation: 'float 4s ease-in-out infinite', lineHeight: 1 },
+    h2: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: 42, fontWeight: 300, letterSpacing: -1.2,
+      lineHeight: 1.2, color: 'var(--text)',
+    },
+    em: { color: 'var(--accent)', fontStyle: 'italic' },
+    p: { fontSize: 15, color: 'var(--text-dim)', maxWidth: 380, lineHeight: 1.75 },
+    chips: { display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 6 },
+    chip: (i) => ({
+      padding: '9px 18px', borderRadius: 100,
+      border: `1px solid ${hoveredChip === i ? 'var(--border-hi)' : 'var(--border)'}`,
+      background: hoveredChip === i ? 'var(--accent-glow)' : 'rgba(255,255,255,0.02)',
+      fontSize: 13, color: hoveredChip === i ? 'var(--text)' : 'var(--text-dim)',
+      cursor: 'pointer', transition: 'all 0.2s',
+      transform: hoveredChip === i ? 'translateY(-2px)' : 'none',
+    }),
+  };
+
+  return (
+    <div style={s.wrap}>
+      <div style={s.icon}>✈️</div>
+      <h2 style={s.h2}>Plan your next<br/><em style={s.em}>Indian adventure</em></h2>
+      <p style={s.p}>
+        Tell me where you want to go, your budget, and trip duration.
+        The agent will research flights, hotels, and activities — all in ₹.
+      </p>
+      <div style={s.chips}>
+        {CHIPS.map((c, i) => (
+          <div
+            key={i}
+            style={s.chip(i)}
+            onClick={() => onFillPrompt(c.prompt)}
+            onMouseEnter={() => setHoveredChip(i)}
+            onMouseLeave={() => setHoveredChip(null)}
+          >
+            {c.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+window.WelcomeScreen = WelcomeScreen;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/AgentFeed.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="AgentFeed-jsx">
+const { useEffect, useRef } = React;
+
+const AgentFeed = ({ steps, thinking, showWelcome, onFillPrompt }) => {
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [steps, thinking]);
+
+  const s = {
+    feed: {
+      flex: 1, overflowY: 'auto',
+      padding: '32px 48px 20px',
+      display: 'flex', flexDirection: 'column',
+      position: 'relative', zIndex: 1,
+    },
+  };
+
+  return (
+    <div style={s.feed}>
+      {showWelcome
+        ? <WelcomeScreen onFillPrompt={onFillPrompt}/>
+        : steps.map((step, i) => (
+            <StepCard
+              key={i}
+              type={step.type}
+              content={step.content}
+              stepNum={step.stepNum}
+              toolName={step.toolName}
+            />
+          ))
+      }
+      {thinking && <ThinkingCard label={thinking}/>}
+      <div ref={bottomRef}/>
+    </div>
+  );
+};
+window.AgentFeed = AgentFeed;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/components/InputArea.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="InputArea-jsx">
+const { useRef } = React;
+
+const SendIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"/>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+  </svg>
+);
+
+const InputArea = ({ value, onChange, onSend, disabled }) => {
+  const [focused, setFocused] = React.useState(false);
+  const ref = useRef(null);
+
+  const autoResize = () => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = Math.min(ref.current.scrollHeight, 140) + 'px';
+    }
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
+  };
+
+  const s = {
+    wrap: { padding: '18px 48px 26px', borderTop: '1px solid var(--border)', background: 'var(--bg)' },
+    inputWrap: {
+      display: 'flex', gap: 12, alignItems: 'flex-end',
+      background: 'var(--bg2)',
+      border: `1px solid ${focused ? 'var(--border-hi)' : 'var(--border)'}`,
+      borderRadius: 20, padding: '12px 14px',
+      boxShadow: focused ? '0 0 0 3px var(--accent-glow)' : 'none',
+      transition: 'all 0.25s',
+    },
+    textarea: {
+      flex: 1, background: 'none', border: 'none', outline: 'none',
+      color: 'var(--text)', fontFamily: "'Plus Jakarta Sans', sans-serif",
+      fontSize: 15, lineHeight: 1.6, resize: 'none',
+      maxHeight: 140, minHeight: 24,
+    },
+    btn: {
+      width: 42, height: 42, borderRadius: 12,
+      background: disabled
+        ? 'var(--bg3)'
+        : 'linear-gradient(135deg, var(--accent), var(--accent2))',
+      border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: disabled ? 'var(--text-dimmer)' : 'white',
+      transition: 'all 0.2s', flexShrink: 0,
+      opacity: disabled ? 0.5 : 1,
+    },
+    hint: {
+      display: 'flex', gap: 18, marginTop: 10,
+      fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'var(--text-dimmer)',
+    },
+    kbd: {
+      background: 'var(--bg3)', border: '1px solid var(--border)',
+      padding: '1px 5px', borderRadius: 4, fontSize: 10,
+      fontFamily: "'DM Mono', monospace",
+    },
+    hintItem: { display: 'flex', alignItems: 'center', gap: 4 },
+  };
+
+  return (
+    <div style={s.wrap}>
+      <div style={s.inputWrap}>
+        <textarea
+          ref={ref}
+          style={s.textarea}
+          value={value}
+          onChange={e => { onChange(e.target.value); autoResize(); }}
+          onKeyDown={handleKey}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Where do you want to go? Include destination, duration, budget, and number of travellers…"
+          rows={1}
+        />
+        <button style={s.btn} onClick={onSend} disabled={disabled}>
+          <SendIcon/>
+        </button>
+      </div>
+      <div style={s.hint}>
+        <span style={s.hintItem}><kbd style={s.kbd}>Enter</kbd> send</span>
+        <span style={s.hintItem}><kbd style={s.kbd}>Shift</kbd>+<kbd style={s.kbd}>Enter</kbd> newline</span>
+        <span style={s.hintItem}>All prices in ₹</span>
+      </div>
+    </div>
+  );
+};
+window.InputArea = InputArea;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/App.jsx
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="App-jsx">
+const { useState, useCallback } = React;
+
+const TOOL_LABELS = {
+  web_search:     '🔍 Web Search',
+  calculator:     '🧮 Calculator',
+  save_itinerary: '💾 Save Itinerary',
+};
+
+const App = () => {
+  const [theme, setTheme]           = useState('dark');
+  const [input, setInput]           = useState('');
+  const [steps, setSteps]           = useState([]);
+  const [thinking, setThinking]     = useState(null);
+  const [status, setStatus]         = useState('idle');
+  const [running, setRunning]       = useState(false);
+  const [history, setHistory]       = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+  };
+
+  const addStep = useCallback((type, content, stepNum, toolName) => {
+    setSteps(prev => [...prev, { type, content, stepNum, toolName }]);
+  }, []);
+
+  const fillPrompt = (text) => {
+    setInput(text);
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || running) return;
+    const userText = input.trim();
+
+    setRunning(true);
+    setInput('');
+    setShowWelcome(false);
+    setSteps([]);
+    setStatus('running');
+    setCurrentStep(0);
+    setHistory(prev => [userText.slice(0, 55) + (userText.length > 55 ? '…' : ''), ...prev].slice(0, 8));
+
+    addStep('user-msg', userText, null, null);
+
+    const messages = [{ role: 'user', content: userText }];
+    const MAX_STEPS = 10;
+
+    for (let i = 0; i < MAX_STEPS; i++) {
+      const stepNum = i + 1;
+      setCurrentStep(stepNum);
+      setThinking('Thinking…');
+
+      let llmText;
+      try {
+        llmText = await window.AgentRunner.callLLM(messages);
+      } catch (err) {
+        setThinking(null);
+        addStep('obs', `Error: ${err.message}`, stepNum, null);
+        break;
+      }
+
+      setThinking(null);
+
+      const { thought, action, actionInput, finalAnswer } = window.AgentRunner.parseResponse(llmText);
+
+      if (thought) addStep('thought', thought, stepNum, null);
+
+      if (finalAnswer) {
+        addStep('final', finalAnswer, stepNum, null);
+        window.AgentRunner.downloadItinerary(finalAnswer);
+        setStatus('done');
+        break;
+      }
+
+      if (action) {
+        const toolLabel = TOOL_LABELS[action] || action;
+        addStep('action', `${action}("${actionInput}")`, stepNum, toolLabel);
+        setThinking(`Running ${action}…`);
+
+        let obs;
+        try {
+          obs = await window.AgentRunner.executeTool(action, actionInput);
+        } catch (e) {
+          obs = `Tool error: ${e.message}`;
+        }
+
+        setThinking(null);
+        addStep('obs', obs, stepNum, null);
+
+        messages.push({ role: 'assistant', content: llmText });
+        messages.push({ role: 'user', content: `Observation: ${obs}` });
+      } else {
+        messages.push({
+          role: 'user',
+          content: 'Invalid action. Continue with: Thought / Action / Action Input.',
+        });
+      }
+    }
+
+    setRunning(false);
+    if (status !== 'done') setStatus('idle');
+  };
+
+  const s = {
+    app: {
+      height: '100vh', display: 'flex', flexDirection: 'column',
+      position: 'relative', overflow: 'hidden',
+    },
+    body: {
+      flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1,
+    },
+    main: {
+      flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    },
+  };
+
+  return (
+    <div style={s.app}>
+      <AmbientBackground/>
+      <Header theme={theme} onToggleTheme={toggleTheme} status={status}/>
+      <div style={s.body}>
+        <Sidebar onFillPrompt={fillPrompt} history={history}/>
+        <main style={s.main}>
+          <ProgressPips total={8} current={currentStep} visible={running || status === 'done'}/>
+          <AgentFeed
+            steps={steps}
+            thinking={thinking}
+            showWelcome={showWelcome}
+            onFillPrompt={fillPrompt}
+          />
+          <InputArea
+            value={input}
+            onChange={setInput}
+            onSend={sendMessage}
+            disabled={running}
+          />
+        </main>
+      </div>
+    </div>
+  );
+};
+window.App = App;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/styles/finalRendered.css  (injected)
+════════════════════════════════════════════════════════════ -->
+<style id="finalRendered-css">
+  .final-rendered h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px; font-weight: 600;
+    color: var(--accent);
+    margin: 18px 0 10px;
+    letter-spacing: -0.3px;
+  }
+  .final-rendered h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--text-dim);
+    margin: 22px 0 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .final-rendered p  { margin-bottom: 8px; line-height: 1.75; font-size: 14px; }
+  .final-rendered ul { padding-left: 22px; margin-bottom: 10px; }
+  .final-rendered li { margin-bottom: 6px; font-size: 14px; line-height: 1.65; }
+  .final-rendered strong { color: var(--accent); font-weight: 600; }
+  .final-rendered table {
+    width: 100%; border-collapse: collapse;
+    margin: 14px 0; font-size: 13px; border-radius: 8px; overflow: hidden;
+  }
+  .final-rendered table th {
+    text-align: left; padding: 9px 14px;
+    background: var(--bg3);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .final-rendered table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .final-rendered table tr:last-child td { border-bottom: none; }
+  .final-rendered table tbody tr:nth-child(even) td { background: rgba(128,128,128,0.04); }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILE: src/main.jsx  (entry point)
+════════════════════════════════════════════════════════════ -->
+<script type="text/babel" id="main-jsx">
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
