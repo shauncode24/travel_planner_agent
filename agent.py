@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 from prompts import SYSTEM_PROMPT
 from tools import TOOLS, save_itinerary
+from db import create_trip, log_step, complete_trip, fail_trip
 
 load_dotenv()
 
@@ -74,6 +75,8 @@ def parse_response(response):
 
 
 def run_agent(user_input):
+    trip_id = create_trip(user_input)
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_input}
@@ -97,6 +100,7 @@ def run_agent(user_input):
             print("\nFINAL ANSWER:\n")
             print(final_answer)
             save_itinerary(final_answer)
+            complete_trip(trip_id, final_answer)
             break
 
         # ── Valid tool action ─────────────────────────────────────────
@@ -108,6 +112,8 @@ def run_agent(user_input):
 
             tool_function = TOOLS[action]
             observation = tool_function(action_input)
+            log_step(trip_id, step, thought="", action=action, 
+                     action_input=action_input, observation=str(observation))
 
             print("\nObservation:")
             print(str(observation))  # full observation, no truncation
