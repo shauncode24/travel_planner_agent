@@ -5,11 +5,11 @@
 import { useState, useCallback, useRef } from 'react';
 
 import AmbientBackground from './components/AmbientBackground';
-import Header            from './components/Header';
-import Sidebar           from './components/Sidebar';
-import ProgressPips      from './components/ProgressPips';
-import AgentFeed         from './components/AgentFeed';
-import InputArea         from './components/InputArea';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import ProgressPips from './components/ProgressPips';
+import AgentFeed from './components/AgentFeed';
+import InputArea from './components/InputArea';
 
 import { parseResponse, callLLM, executeTool } from './utils/agentRunner';
 
@@ -17,21 +17,21 @@ import './styles/globals.css';
 import './styles/finalRendered.css';
 
 const TOOL_DISPLAY_LABELS = {
-  web_search:     '🔍 Web Search',
-  calculator:     '🧮 Calculator',
+  web_search: '🔍 Web Search',
+  calculator: '🧮 Calculator',
   save_itinerary: '💾 Save Itinerary',
 };
 
-const MAX_STEPS = 10;
+const MAX_STEPS = 12;
 
 const App = () => {
-  const [theme,       setTheme]       = useState('dark');
-  const [input,       setInput]       = useState('');
-  const [steps,       setSteps]       = useState([]);
-  const [thinking,    setThinking]    = useState(null);
-  const [status,      setStatus]      = useState('idle');
-  const [running,     setRunning]     = useState(false);
-  const [history,     setHistory]     = useState([]);
+  const [theme, setTheme] = useState('dark');
+  const [input, setInput] = useState('');
+  const [steps, setSteps] = useState([]);
+  const [thinking, setThinking] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcome, setShowWelcome] = useState(true);
   // Logs accumulate ALL intermediate steps (thought/action/obs) for txt export
@@ -150,7 +150,7 @@ const App = () => {
     try {
       const logLines = logsRef.current.map((s) => {
         const label = s.type.toUpperCase();
-        const step  = s.stepNum != null ? ` [Step ${s.stepNum}]` : '';
+        const step = s.stepNum != null ? ` [Step ${s.stepNum}]` : '';
         return `=== ${label}${step} ===\n${s.content}\n`;
       }).join('\n');
       await fetch('/api/save-log', {

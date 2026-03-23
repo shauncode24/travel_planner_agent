@@ -16,8 +16,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print("KEY LOADED:", bool(os.getenv("OPENROUTER_API_KEY")))
-
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 TAVILY_API_KEY     = os.getenv("TAVILY_API_KEY")
 
@@ -34,9 +32,9 @@ def chat():
     system   = body.get("system", "")
 
     payload = {
-        "model":    "openai/gpt-3.5-turbo",
-        "max_tokens": 1000,
-        "messages": [{"role": "system", "content": system}] + messages,
+        "model":      "x-ai/grok-4.1-fast",
+        # "max_tokens": 3500,
+        "messages":   [{"role": "system", "content": system}] + messages,
     }
 
     try:
@@ -80,14 +78,24 @@ def search():
             },
             timeout=30,
         )
-        data = r.json()
-        answer = data.get("answer", "")
-        if answer:
-            return jsonify({"result": answer})
+        data    = r.json()
+        answer  = data.get("answer", "")
         results = data.get("results", [])
-        if results:
-            return jsonify({"result": results[0].get("content", "No results")})
-        return jsonify({"result": "No useful results found"})
+
+        # Collect top URLs + snippets so the LLM can embed real booking links
+        snippets = []
+        for res in results[:5]:
+            url     = res.get("url", "")
+            content = res.get("content", "")[:400]
+            title   = res.get("title", "")
+            if url:
+                snippets.append(f"[{title}]({url}): {content}")
+
+        combined = answer
+        if snippets:
+            combined += "\n\nSource links:\n" + "\n".join(snippets)
+
+        return jsonify({"result": combined or "No useful results found"})
     except Exception as e:
         return jsonify({"result": f"Error in web_search: {e}"}), 500
 

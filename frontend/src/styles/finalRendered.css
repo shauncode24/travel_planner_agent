@@ -2,13 +2,15 @@
    FILE: src/styles/finalRendered.css
 ───────────────────────────────────────────────── */
 
+/* ── Headings ── */
 .final-rendered h2 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--accent);
-  margin: 18px 0 10px;
+  margin: 20px 0 8px;
   letter-spacing: -0.3px;
+  line-height: 1.3;
 }
 
 .final-rendered h3 {
@@ -18,44 +20,142 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--text-dim);
-  margin: 22px 0 10px;
+  margin: 24px 0 10px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 6px;
 }
 
-.final-rendered p  { margin-bottom: 8px; line-height: 1.75; font-size: 14px; }
-.final-rendered ul { padding-left: 22px; margin-bottom: 10px; }
-.final-rendered li { margin-bottom: 6px; font-size: 14px; line-height: 1.65; }
-.final-rendered strong { color: var(--accent); font-weight: 600; }
+.final-rendered h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+  margin: 16px 0 8px;
+}
 
+/* ── Inline ── */
+.final-rendered p       { margin-bottom: 8px; line-height: 1.75; font-size: 14px; }
+.final-rendered strong  { color: var(--accent); font-weight: 600; }
+.final-rendered em      { color: var(--text-dim); font-style: italic; }
+
+/* ── Links ── */
+.final-rendered .md-link,
+.final-rendered a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+  font-weight: 500;
+}
+.final-rendered .md-link:hover,
+.final-rendered a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Horizontal rule ── */
+.final-rendered .md-hr,
+.final-rendered hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
+/* ── Blockquote ── */
+.final-rendered .md-blockquote,
+.final-rendered blockquote {
+  margin: 10px 0 12px;
+  padding: 10px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-glow);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.65;
+}
+
+/* ── Lists ── */
+.final-rendered ul,
+.final-rendered ol  { padding-left: 20px; margin-bottom: 10px; }
+.final-rendered li  { margin-bottom: 5px; font-size: 14px; line-height: 1.65; }
+.final-rendered ol  { list-style: decimal; }
+
+/* ── Spacer ── */
+.final-rendered .md-spacer { height: 6px; }
+
+/* ── Tables ── */
 .final-rendered table {
   width: 100%;
   border-collapse: collapse;
-  margin: 14px 0;
+  margin: 12px 0 16px;
   font-size: 13px;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .final-rendered table th {
   text-align: left;
-  padding: 9px 14px;
+  padding: 9px 12px;
   background: var(--bg3);
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-dim);
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .final-rendered table td {
-  padding: 9px 14px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
+  vertical-align: top;
+  line-height: 1.55;
 }
 
 .final-rendered table tr:last-child td { border-bottom: none; }
+
 .final-rendered table tbody tr:nth-child(even) td {
-  background: rgba(128,128,128,0.04);
+  background: rgba(128,128,128,0.03);
+}
+
+.final-rendered table tbody tr:hover td {
+  background: var(--accent-glow);
+  transition: background 0.15s;
+}
+
+/* Links inside table cells */
+.final-rendered table td a,
+.final-rendered table td .md-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(100,150,255,0.08);
+  border: 1px solid rgba(100,150,255,0.2);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: none;
+  transition: all 0.15s;
+}
+
+.final-rendered table td a:hover,
+.final-rendered table td .md-link:hover {
+  background: rgba(100,150,255,0.16);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* ── Emoji section headers (h3 with emoji) ── */
+.final-rendered h3:has-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }

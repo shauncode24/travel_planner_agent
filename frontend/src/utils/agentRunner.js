@@ -1,21 +1,11 @@
 // ─────────────────────────────────────────────────
 // FILE: src/utils/agentRunner.js
-//
-// All real work is done by the Python Flask backend.
-// This file:
-//   • Parses ReAct-format LLM responses
-//   • Sends messages to /api/chat  (OpenRouter via Flask)
-//   • Routes tool calls to /api/search, /api/calc, /api/save
 // ─────────────────────────────────────────────────
 
 import { getSystemPrompt } from './systemPrompt';
 
-const BASE = '/api'; // proxied by Vite → http://localhost:8000
+const BASE = '/api';
 
-/**
- * Parses a ReAct-format LLM response into its parts:
- * thought, action, actionInput, finalAnswer.
- */
 export const parseResponse = (text) => {
   const lines = text.split('\n');
   let thought = '', action = '', actionInput = '', finalAnswer = '';
@@ -45,10 +35,6 @@ export const parseResponse = (text) => {
   return { thought, action, actionInput, finalAnswer };
 };
 
-/**
- * Calls the LLM via the Flask /api/chat endpoint.
- * The Flask server uses OpenRouter (gpt-3.5-turbo) with your API key.
- */
 export const callLLM = async (messages) => {
   const res = await fetch(`${BASE}/chat`, {
     method: 'POST',
@@ -69,9 +55,6 @@ export const callLLM = async (messages) => {
   return data.text || '';
 };
 
-/**
- * Real web search via Tavily (routed through Flask /api/search).
- */
 export const webSearch = async (query) => {
   const res = await fetch(`${BASE}/search`, {
     method: 'POST',
@@ -82,9 +65,6 @@ export const webSearch = async (query) => {
   return data.result || 'No results found.';
 };
 
-/**
- * Calculator via Flask /api/calc (safe Python eval).
- */
 export const evalCalc = async (expression) => {
   const res = await fetch(`${BASE}/calc`, {
     method: 'POST',
@@ -95,12 +75,7 @@ export const evalCalc = async (expression) => {
   return data.result || 'Error: no result';
 };
 
-/**
- * Save itinerary via Flask /api/save — saves to backend/output/ directory.
- * Also triggers a browser download for convenience.
- */
 export const saveItinerary = async (text) => {
-  // Save on the server (backend/output/)
   const res = await fetch(`${BASE}/save`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -108,7 +83,7 @@ export const saveItinerary = async (text) => {
   });
   const data = await res.json();
 
-  // Also trigger a browser download
+  // Also trigger browser download
   const blob = new Blob([text], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -119,10 +94,6 @@ export const saveItinerary = async (text) => {
   return data.result || 'Itinerary saved.';
 };
 
-/**
- * Routes action name → tool function.
- * web_search and calc are now async (real API calls).
- */
 export const executeTool = async (action, input) => {
   switch (action) {
     case 'web_search':     return await webSearch(input);

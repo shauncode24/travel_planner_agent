@@ -22,7 +22,7 @@ def call_llm(messages):
     }
 
     payload = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "x-ai/grok-4.1-fast",
         "messages": messages
     }
 
