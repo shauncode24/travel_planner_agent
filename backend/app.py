@@ -6,14 +6,17 @@ Endpoints:
   POST /api/search  → web_search (Tavily)
   POST /api/calc    → calculator (safe eval)
   POST /api/save    → save_itinerary to disk
+  POST /api/pdf     → generate formatted PDF from itinerary markdown
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-import os, requests as req, re, datetime
+import os, requests as req, re, datetime, io
 from dotenv import load_dotenv
 
 load_dotenv()
+
+print("KEY LOADED:", bool(os.getenv("OPENROUTER_API_KEY")))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 TAVILY_API_KEY     = os.getenv("TAVILY_API_KEY")
@@ -30,9 +33,9 @@ def chat():
     messages = body.get("messages", [])
     system   = body.get("system", "")
 
-    # Prepend system prompt as first user/assistant exchange expected by OpenRouter
     payload = {
         "model":    "openai/gpt-3.5-turbo",
+        "max_tokens": 1000,
         "messages": [{"role": "system", "content": system}] + messages,
     }
 
@@ -96,7 +99,6 @@ def calc():
     expression = (request.json or {}).get("expression", "")
     original   = expression
 
-    # Clean the expression (same logic as tools.py)
     expression = re.sub(r'\([^)]*[a-zA-Z][^)]*\)', '', expression)
     expression = expression.replace('₹','').replace('$','').replace('€','').replace(',','')
     expression = re.sub(r'[a-zA-Z_]+', '', expression)
@@ -141,11 +143,45 @@ def save():
         return jsonify({"result": f"Error saving: {e}"}), 500
 
 
-# ── Health check  ────────────────────────────────────────────────────────────
+# ── /api/pdf  ───────────────────────────────────────────────────────────────
+
+@app.route("/api/pdf", methods=["POST"])
+def generate_pdf_endpoint():
+    """
+    Accepts: { "text": "<markdown itinerary>" }
+    Returns: A formatted PDF file as a download.
+    Also saves a copy to output/ directory.
+    """
+    text = (request.json or {}).get("text", "")
+    if not text:
+        return jsonify({"error": "No itinerary text provided"}), 400
+
+    try:
+        from pdf_generator import generate_pdf
+        pdf_bytes = generate_pdf(text)
+
+        # Save a copy on disk
+        os.makedirs("output", exist_ok=True)
+        ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        disk_path = f"output/itinerary_{ts}.pdf"
+        with open(disk_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        # Stream back to browser as a download
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"yatra_itinerary_{ts}.pdf",
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── /api/save-log  ──────────────────────────────────────────────────────────
 
 @app.route("/api/save-log", methods=["POST"])
 def save_log():
-    """Save the agent reasoning steps (thoughts / actions / observations) as a log file."""
     text = (request.json or {}).get("text", "")
     if not text:
         return jsonify({"result": "Error: no content"}), 400
@@ -163,6 +199,8 @@ def save_log():
     except Exception as e:
         return jsonify({"result": f"Error saving log: {e}"}), 500
 
+
+# ── Health check  ────────────────────────────────────────────────────────────
 
 @app.route("/api/health", methods=["GET"])
 def health():
