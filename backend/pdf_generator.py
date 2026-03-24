@@ -18,14 +18,14 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 # ── Colour palette (mirrors the UI) ──────────────────────────────────────────
-AMBER       = colors.HexColor("#E8920A")
-DARK_BG     = colors.HexColor("#1A1C2E")
-CARD_BG     = colors.HexColor("#20223A")
-TEXT_MAIN   = colors.HexColor("#E8E5DC")
-TEXT_DIM    = colors.HexColor("#9A9690")
-BORDER      = colors.HexColor("#2E3050")
-GREEN       = colors.HexColor("#3CC88C")
-BLUE        = colors.HexColor("#6496FF")
+AMBER       = colors.HexColor("#0066CC")  # --accent
+DARK_BG     = colors.HexColor("#F0F6FF")  # --bg
+CARD_BG     = colors.HexColor("#FFFFFF")  # clean white for cards/tables
+TEXT_MAIN   = colors.HexColor("#0D1A2E")  # --text
+TEXT_DIM    = colors.HexColor("#4A6080")  # --text-dim
+BORDER      = colors.HexColor("#C8DDF0")  # solid approximation for --border
+GREEN       = colors.HexColor("#0D9E6A")  # --green
+BLUE        = colors.HexColor("#2255CC")  # --blue
 WHITE       = colors.white
 BLACK       = colors.black
 
